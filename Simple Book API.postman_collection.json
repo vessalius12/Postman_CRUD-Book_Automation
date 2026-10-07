@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "19f24127-2819-4a23-9339-9fb02afabced",
+    "name": "Simple Book API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58729123",
+    "_collection_link": "https://go.postman.co/collection/58729123-19f24127-2819-4a23-9339-9fb02afabced?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst response = pm.response.json();\n\nconsole.log(response.status);\nconsole.log(response['status']);\n\n\npm.test(\"Status Should be OK\", () => {\n    pm.expect(response.status).to.eql('OK');\n});\n\npostman.setNextRequest(\"List Of Books\");\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/status/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "status",
+            ""
+          ]
+        },
+        "description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+      },
+      "response": []
+    },
+    {
+      "name": "List Of Books",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nconst response = pm.response.json();\r\n\r\nconst nonFictionBooks = response.filter((book) => book.available == true);\r\n\r\nconst book = nonFictionBooks[0];\r\n\r\nif (book) {\r\n    pm.globals.set(\"bookID\", book.id);\r\n}\r\n\r\npm.test(\"Book found\", () => {\r\n    pm.expect(book).to.be.an('object');\r\n    pm.expect(book.available).to.be.true;\r\n    pm.expect(book.available).to.eql(true);\r\n    pm.expect(book.type).to.eql(\"non-fiction\");\r\n});\r\n\r\npm.globals.set(\"bookID\", book.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/books?type=non-fiction",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "books"
+          ],
+          "query": [
+            {
+              "key": "type",
+              "value": "non-fiction"
+            },
+            {
+              "key": "limit",
+              "value": "3",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Retrieves a list of all books available in the catalog.\n\n**Base URL:** `{{baseUrl}}/books`\n\n## Query Parameters\n\n| Parameter | Type   | Required | Description                                                                 |\n|-----------|--------|----------|-----------------------------------------------------------------------------|\n| `type`    | string | No       | Filter books by type. Accepted values: `fiction`, `non-fiction`.            |\n| `limit`   | number | No       | Limit the number of books returned. Must be a positive integer (max: 20).   |\n\n## Response\n\nReturns a JSON array of book objects. Each object contains:\n\n| Field       | Type    | Description                              |\n|-------------|---------|------------------------------------------|\n| `id`        | number  | Unique identifier for the book.          |\n| `name`      | string  | Title of the book.                       |\n| `type`      | string  | Genre of the book (`fiction` or `non-fiction`). |\n| `available` | boolean | Whether the book is available for order. |\n\n## Example Response\n\n```json\n[\n  { \"id\": 1, \"name\": \"The Russian\", \"type\": \"fiction\", \"available\": true },\n  { \"id\": 2, \"name\": \"Just as I Am\", \"type\": \"non-fiction\", \"available\": false }\n]\n```"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Single Book",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nconst response = pm.response.json();\r\n\r\npm.test(\"Is In Stock\", () => {\r\n    pm.expect(response['current-stock']).to.be.above(0);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/books/:bookId",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "books",
+            ":bookId"
+          ],
+          "variable": [
+            {
+              "key": "bookId",
+              "value": "{{bookID}}"
+            }
+          ]
+        },
+        "description": "## Get Single Book\n\nRetrieves detailed information about a specific book by its unique ID.\n\n---\n\n## Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `bookId` | integer | ✅ Yes | The unique identifier of the book. |\n\n---\n\n## Sample Response — 200 OK\n\n``` json\n{\n  \"id\": 1,\n  \"entityType\": \"BOOK\",\n  \"available\": true,\n  \"timestamp\": 1752239490804,\n  \"created\": \"2025-07-11T13:11:30.804Z\",\n  \"isbn\": \"1780899475\",\n  \"name\": \"The Russian\",\n  \"current-stock\": 12,\n  \"price\": 12.98,\n  \"author\": \"James Patterson and James O. Born\",\n  \"type\": \"fiction\"\n}\n\n ```\n\n---\n\n## Response Fields\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `id` | integer | Unique identifier for the book. |\n| `name` | string | Title of the book. |\n| `author` | string | Name of the author(s). |\n| `type` | string | Genre or category of the book (e.g. `fiction`, `non-fiction`). |\n| `available` | boolean | Whether the book is currently available for order. |\n| `price` | number | Price of the book in the default currency. |\n| `current-stock` | integer | Number of copies currently in stock. |\n| `isbn` | string | International Standard Book Number (ISBN) for the book. |\n| `created` | string | ISO 8601 timestamp indicating when the book record was created. |"
+      },
+      "response": []
+    },
+    {
+      "name": "Order Book",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nconst response = pm.response.json();\r\n\r\npm.globals.set(\"orderId\", response.orderId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"bookId\": {{bookID}},\r\n  \"customerName\": \"{{$randomFullName}}\"\r\n}\r\n\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl.click}}/orders",
+          "host": [
+            "{{baseUrl.click}}"
+          ],
+          "path": [
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Books Orders",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl.click}}/orders",
+          "host": [
+            "{{baseUrl.click}}"
+          ],
+          "path": [
+            "orders"
+          ]
+        },
+        "description": "## Get Single Book\n\nRetrieves detailed information about a specific book by its unique ID.\n\n---\n\n## Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `bookId` | integer | ✅ Yes | The unique identifier of the book. |\n\n---\n\n## Sample Response — 200 OK\n\n``` json\n{\n  \"id\": 1,\n  \"entityType\": \"BOOK\",\n  \"available\": true,\n  \"timestamp\": 1752239490804,\n  \"created\": \"2025-07-11T13:11:30.804Z\",\n  \"isbn\": \"1780899475\",\n  \"name\": \"The Russian\",\n  \"current-stock\": 12,\n  \"price\": 12.98,\n  \"author\": \"James Patterson and James O. Born\",\n  \"type\": \"fiction\"\n}\n\n ```\n\n---\n\n## Response Fields\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `id` | integer | Unique identifier for the book. |\n| `name` | string | Title of the book. |\n| `author` | string | Name of the author(s). |\n| `type` | string | Genre or category of the book (e.g. `fiction`, `non-fiction`). |\n| `available` | boolean | Whether the book is currently available for order. |\n| `price` | number | Price of the book in the default currency. |\n| `current-stock` | integer | Number of copies currently in stock. |\n| `isbn` | string | International Standard Book Number (ISBN) for the book. |\n| `created` | string | ISO 8601 timestamp indicating when the book record was created. |"
+      },
+      "response": []
+    },
+    {
+      "name": "Get An Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl.click}}/orders/:orderId",
+          "host": [
+            "{{baseUrl.click}}"
+          ],
+          "path": [
+            "orders",
+            ":orderId"
+          ],
+          "variable": [
+            {
+              "key": "orderId",
+              "value": "{{orderId}}"
+            }
+          ]
+        },
+        "description": "## Get Single Book\n\nRetrieves detailed information about a specific book by its unique ID.\n\n---\n\n## Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `bookId` | integer | ✅ Yes | The unique identifier of the book. |\n\n---\n\n## Sample Response — 200 OK\n\n``` json\n{\n  \"id\": 1,\n  \"entityType\": \"BOOK\",\n  \"available\": true,\n  \"timestamp\": 1752239490804,\n  \"created\": \"2025-07-11T13:11:30.804Z\",\n  \"isbn\": \"1780899475\",\n  \"name\": \"The Russian\",\n  \"current-stock\": 12,\n  \"price\": 12.98,\n  \"author\": \"James Patterson and James O. Born\",\n  \"type\": \"fiction\"\n}\n\n ```\n\n---\n\n## Response Fields\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `id` | integer | Unique identifier for the book. |\n| `name` | string | Title of the book. |\n| `author` | string | Name of the author(s). |\n| `type` | string | Genre or category of the book (e.g. `fiction`, `non-fiction`). |\n| `available` | boolean | Whether the book is currently available for order. |\n| `price` | number | Price of the book in the default currency. |\n| `current-stock` | integer | Number of copies currently in stock. |\n| `isbn` | string | International Standard Book Number (ISBN) for the book. |\n| `created` | string | ISO 8601 timestamp indicating when the book record was created. |"
+      },
+      "response": []
+    },
+    {
+      "name": "Update an Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {\r\n    pm.response.to.have.status(204);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"customerName\": \"Yudhistira {{$randomLastName}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl.click}}/orders/:orderId",
+          "host": [
+            "{{baseUrl.click}}"
+          ],
+          "path": [
+            "orders",
+            ":orderId"
+          ],
+          "variable": [
+            {
+              "key": "orderId",
+              "value": "{{orderId}}"
+            }
+          ]
+        },
+        "description": "## Get Single Book\n\nRetrieves detailed information about a specific book by its unique ID.\n\n---\n\n## Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `bookId` | integer | ✅ Yes | The unique identifier of the book. |\n\n---\n\n## Sample Response — 200 OK\n\n``` json\n{\n  \"id\": 1,\n  \"entityType\": \"BOOK\",\n  \"available\": true,\n  \"timestamp\": 1752239490804,\n  \"created\": \"2025-07-11T13:11:30.804Z\",\n  \"isbn\": \"1780899475\",\n  \"name\": \"The Russian\",\n  \"current-stock\": 12,\n  \"price\": 12.98,\n  \"author\": \"James Patterson and James O. Born\",\n  \"type\": \"fiction\"\n}\n\n ```\n\n---\n\n## Response Fields\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `id` | integer | Unique identifier for the book. |\n| `name` | string | Title of the book. |\n| `author` | string | Name of the author(s). |\n| `type` | string | Genre or category of the book (e.g. `fiction`, `non-fiction`). |\n| `available` | boolean | Whether the book is currently available for order. |\n| `price` | number | Price of the book in the default currency. |\n| `current-stock` | integer | Number of copies currently in stock. |\n| `isbn` | string | International Standard Book Number (ISBN) for the book. |\n| `created` | string | ISO 8601 timestamp indicating when the book record was created. |"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {\r\n    pm.response.to.have.status(204);\r\n});\r\n\r\npostman.setNextRequest(null);\r\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl.click}}/orders/:orderId",
+          "host": [
+            "{{baseUrl.click}}"
+          ],
+          "path": [
+            "orders",
+            ":orderId"
+          ],
+          "variable": [
+            {
+              "key": "orderId",
+              "value": "{{orderId}}"
+            }
+          ]
+        },
+        "description": "## Get Single Book\n\nRetrieves detailed information about a specific book by its unique ID.\n\n---\n\n## Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `bookId` | integer | ✅ Yes | The unique identifier of the book. |\n\n---\n\n## Sample Response — 200 OK\n\n``` json\n{\n  \"id\": 1,\n  \"entityType\": \"BOOK\",\n  \"available\": true,\n  \"timestamp\": 1752239490804,\n  \"created\": \"2025-07-11T13:11:30.804Z\",\n  \"isbn\": \"1780899475\",\n  \"name\": \"The Russian\",\n  \"current-stock\": 12,\n  \"price\": 12.98,\n  \"author\": \"James Patterson and James O. Born\",\n  \"type\": \"fiction\"\n}\n\n ```\n\n---\n\n## Response Fields\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `id` | integer | Unique identifier for the book. |\n| `name` | string | Title of the book. |\n| `author` | string | Name of the author(s). |\n| `type` | string | Genre or category of the book (e.g. `fiction`, `non-fiction`). |\n| `available` | boolean | Whether the book is currently available for order. |\n| `price` | number | Price of the book in the default currency. |\n| `current-stock` | integer | Number of copies currently in stock. |\n| `isbn` | string | International Standard Book Number (ISBN) for the book. |\n| `created` | string | ISO 8601 timestamp indicating when the book record was created. |"
+      },
+      "response": []
+    },
+    {
+      "name": "Register API Client",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n   \"clientName\": \"Postman12\",\n   \"clientEmail\": \"valentin11112@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api-clients",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api-clients"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://simple-books-api.glitch.me"
+    },
+    {
+      "key": "accessToken",
+      "value": "a7ac725c25c9e6af621ab3611c68813df867a228042a982fce337b9843a44080"
+    },
+    {
+      "key": "baseUrl.click",
+      "value": "https://simple-books-api.click"
+    }
+  ]
+}
