@@ -1,4 +1,4 @@
-Simple Books API - Tutorial About Automation From Freecodecamp Youtube
+Simple Books API - Tutorial About Automation
 This API allows you to reserve a book.
 
 The API is available at https://simple-books-api.click
